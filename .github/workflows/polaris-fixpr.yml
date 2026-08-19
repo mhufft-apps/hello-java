@@ -45,3 +45,5 @@ jobs:
         polaris_prComment_severities: "CRITICAL,HIGH"
 
         github_token: ${{ secrets.GITHUB_TOKEN }}
+
+
