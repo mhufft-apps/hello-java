@@ -1,0 +1,47 @@
+name: Polaris SCA with Fix PR
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  polaris-scan:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Source
+      uses: actions/checkout@v4
+
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: 17
+        distribution: temurin
+        cache: maven
+
+    - name: Maven Build
+      run: mvn -B -DskipTests package
+
+    - name: Polaris Scan + Fix PR
+      uses: blackduck-inc/black-duck-security-scan@v2
+      with:
+        polaris_server_url: ${{ vars.POLARIS_SERVER_URL }}
+        polaris_access_token: ${{ secrets.POLARIS_ACCESS_TOKEN }}
+        polaris_assessment_types: "SCA"
+
+        # Fix PR settings
+        polaris_fixpr_enabled: true
+        polaris_fixpr_filter_severities: "CRITICAL,HIGH"
+        polaris_fixpr_useUpgradeGuidance: "SHORT_TERM,LONG_TERM"
+        polaris_fixpr_maxCount: 5
+
+        # PR comments on findings
+        polaris_prComment_enabled: true
+        polaris_prComment_severities: "CRITICAL,HIGH"
+
+        github_token: ${{ secrets.GITHUB_TOKEN }}
